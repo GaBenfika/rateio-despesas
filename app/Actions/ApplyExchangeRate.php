@@ -22,13 +22,13 @@ class ApplyExchangeRate
         DB::transaction(function () use ($expense, $rate, $rateDate, $amountBrlCents) {
             $allocations = $expense->allocations;
 
-            $amounts = $this->splitter->split(
+            $brlCentsByAllocation = $this->splitter->split(
                 $amountBrlCents,
                 $allocations->pluck('percentage_bp', 'id')->all() // [allocation_id => pontos-base]
             );
 
             foreach ($allocations as $allocation) {
-                $allocation->update(['amount_brl_cents' => $amounts[$allocation->id]]);
+                $allocation->update(['amount_brl_cents' => $brlCentsByAllocation[$allocation->id]]);
             }
 
             $expense->update([

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\CreateExpense;
-use App\Jobs\ConvertExpenseCurrency;
+use App\Jobs\ConvertExpenseToBrl;
 use App\Models\Company;
 use App\Models\Expense;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
-class ConvertExpenseCurrencyTest extends TestCase
+class ConvertExpenseToBrlTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -81,7 +81,7 @@ class ConvertExpenseCurrencyTest extends TestCase
         $this->expectException(RequestException::class); // o job falha → a fila tentará de novo
 
         try {
-            app()->call([new ConvertExpenseCurrency($expense), 'handle']);
+            app()->call([new ConvertExpenseToBrl($expense), 'handle']);
         } finally {
             $this->assertSame(1, Expense::count());
             $this->assertSame(Expense::STATUS_PENDING, $expense->fresh()->status);

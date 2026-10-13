@@ -2,8 +2,9 @@
 
 namespace App\Actions;
 
-use App\Jobs\ConvertExpenseCurrency;
+use App\Jobs\ConvertExpenseToBrl;
 use App\Models\Expense;
+use App\Services\AllocationSplitter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -45,7 +46,7 @@ class CreateExpense
                 $this->applyExchangeRate->handle($expense, '1', $data['expense_date']);
             } else {
                 // USD: converte na fila, só depois que a transação for confirmada
-                ConvertExpenseCurrency::dispatch($expense)->afterCommit();
+                ConvertExpenseToBrl::dispatch($expense)->afterCommit();
             }
             // USD: fica pendente; a conversão via fila entra no próximo passo
 
@@ -66,14 +67,14 @@ class CreateExpense
             'allocations.*.percentage' => ['required', 'decimal:0,2', 'gt:0', 'max:100'],
         ])->validate();
 
-        $total = array_sum(array_map(
+        $totalBasisPoints = array_sum(array_map(
             fn ($allocation) => $this->toBasisPoints($allocation['percentage']),
             $data['allocations']
         ));
 
-        if ($total !== 10000) {
+        if ($totalBasisPoints !== AllocationSplitter::ONE_HUNDRED_PERCENT) {
             throw ValidationException::withMessages([
-                'allocations' => 'A soma do rateio precisa ser exatamente 100% (recebido: '.($total / 100).'%).',
+                'allocations' => 'A soma do rateio precisa ser exatamente 100% (recebido: '.($totalBasisPoints / 100).'%).',
             ]);
         }
 

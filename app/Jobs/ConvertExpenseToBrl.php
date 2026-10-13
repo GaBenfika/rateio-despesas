@@ -10,7 +10,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class ConvertExpenseCurrency implements ShouldQueue
+class ConvertExpenseToBrl implements ShouldQueue
 {
     use Queueable;
 
@@ -30,7 +30,7 @@ class ConvertExpenseCurrency implements ShouldQueue
 
         $quote = $client->usdToBrl($this->expense->expense_date->toDateString());
 
-        $applyExchangeRate->handle($this->expense, $quote['rate'], $quote['date']);
+        $applyExchangeRate->handle($this->expense, $quote['rate'], $quote['rate_date']);
     }
 
     public function failed(Throwable $exception): void

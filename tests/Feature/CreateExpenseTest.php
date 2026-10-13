@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\CreateExpense;
-use App\Jobs\ConvertExpenseCurrency;
+use App\Jobs\ConvertExpenseToBrl;
 use App\Models\Company;
 use App\Models\Expense;
 
@@ -63,7 +63,7 @@ class CreateExpenseTest extends TestCase
         $this->assertSame(Expense::STATUS_PENDING, $expense->status);
         $this->assertNull($expense->amount_brl_cents);
         $this->assertCount(3, $expense->allocations);
-        Queue::assertPushed(ConvertExpenseCurrency::class);
+        Queue::assertPushed(ConvertExpenseToBrl::class);
     }
 
     public function test_rejeita_rateio_que_nao_soma_cem_por_cento(): void

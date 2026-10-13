@@ -12,7 +12,7 @@ class ExchangeRateClient
      * Em fim de semana ou feriado, a Frankfurter devolve a do último dia útil,
      * e o campo "date" informa qual dia foi usado.
      *
-     * @return array{rate: string, date: string}
+     * @return array{rate: string, rate_date: string}
      */
     public function usdToBrl(string $date): array
     {
@@ -31,7 +31,7 @@ class ExchangeRateClient
 
         return [
             'rate' => (string) $rate,
-            'date' => $response->json('date'),
+            'rate_date' => $response->json('date'),
         ];
     }
 }
