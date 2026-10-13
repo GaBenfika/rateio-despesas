@@ -1,0 +1,84 @@
+/* Fundo cinza claro na área de conteúdo (sobrescreve a variável do Pico) */
+:root[data-theme="light"] {
+    --pico-background-color: #f1f5f9;
+    --pico-font-size: 95%;
+}
+
+body { margin: 0; }
+
+/* Menu lateral FIXO: ocupa sempre a altura toda da janela */
+.sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0;
+    width: 240px;
+    background: #1e293b; color: #cbd5e1;
+    padding: 1.5rem 1rem;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+}
+.sidebar .brand { color: #fff; font-weight: 700; font-size: 1.1rem; padding: 0 .75rem; margin-bottom: 1.5rem; }
+.sidebar .brand small { display: block; font-weight: 400; font-size: .75rem; color: #94a3b8; }
+.sidebar .menu-title {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .08em;
+    color: #64748b; padding: 0 .75rem; margin: 1.25rem 0 .4rem;
+}
+.sidebar .menu a {
+    display: block; padding: .5rem .75rem; margin-bottom: .15rem;
+    border-radius: .5rem; color: #cbd5e1; text-decoration: none; font-size: .92rem;
+}
+.sidebar .menu a:hover { background: #334155; color: #fff; }
+.sidebar .menu a.active { background: #2563eb; color: #fff; }
+.sidebar .user { margin-top: auto; padding: 1rem .75rem 0; border-top: 1px solid #334155; font-size: .82rem; }
+.sidebar .user strong { display: block; color: #fff; }
+.sidebar .user button {
+    width: 100%; margin: .75rem 0 0; padding: .4rem;
+    background: transparent; border: 1px solid #475569; color: #cbd5e1; font-size: .85rem;
+}
+.sidebar .user button:hover { background: #334155; color: #fff; }
+
+/* Conteúdo: empurrado para a direita do menu */
+.content { margin-left: 240px; padding: 2rem 2.5rem; min-height: 100vh; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; }
+.page-header h2 { margin: 0; }
+
+/* Cartão branco que envolve formulários e tabelas */
+.card {
+    --pico-background-color: #fff;
+    background: #fff; border-radius: .75rem; padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .08); margin-bottom: 1.5rem;
+}
+.card > :last-child { margin-bottom: 0; }
+
+/* Tabelas: rolagem horizontal dentro do cartão em vez de quebrar a página */
+.table-wrapper { overflow-x: auto; }
+.table-wrapper table { margin: 0; }
+table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #64748b; white-space: nowrap; }
+td.nowrap { white-space: nowrap; }
+td.money, th.money { text-align: right; white-space: nowrap; }
+td small { color: #64748b; }
+
+/* Rateio: uma linha por unidade */
+.allocations { list-style: none; margin: 0; padding: 0; font-size: .82rem; color: #475569; white-space: nowrap; }
+.allocations li { list-style: none; margin: 0; padding: .1rem 0; }
+.allocations strong { color: #0f172a; font-weight: 500; }
+
+.badge { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+.badge-pending { background: #fef9c3; color: #854d0e; }
+
+button.btn-sm { padding: .3rem .7rem; font-size: .8rem; margin: 0; }
+
+/* Mensagens */
+.alert { padding: 1rem 1.25rem; border-radius: .5rem; margin-bottom: 1.5rem; }
+.alert-success { background: #dcfce7; color: #166534; border-left: 4px solid #16a34a; }
+.alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+.alert-warning { background: #fef9c3; color: #854d0e; border-left: 4px solid #ca8a04; }
+.alert ul { margin: .5rem 0 0; }
+
+/* Login, sem menu */
+.login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.login-wrapper .card { width: 100%; max-width: 400px; }
+
+/* Celular: menu vira faixa no topo */
+@media (max-width: 768px) {
+    .sidebar { position: static; width: auto; }
+    .content { margin-left: 0; padding: 1.25rem; }
+}
