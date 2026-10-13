@@ -19,8 +19,8 @@ class DatabaseSeeder extends Seeder
         $alfa = Company::create(['name' => 'Empresa Alfa']);
         $beta = Company::create(['name' => 'Empresa Beta']);
 
-        $alfa->units()->create(['name' => 'Unidade A']); // slug: unidade-a
-        $alfa->units()->create(['name' => 'Unidade B']); // slug: unidade-b
-        $beta->units()->create(['name' => 'Unidade C']); // slug: unidade-c
+        $alfa->units()->create(['name' => 'Unidade A']); // código: unidade-a
+        $alfa->units()->create(['name' => 'Unidade B']); // código: unidade-b
+        $beta->units()->create(['name' => 'Unidade C']); // código: unidade-c
     }
 }

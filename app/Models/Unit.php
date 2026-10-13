@@ -9,13 +9,13 @@ use Illuminate\Support\Str;
 
 class Unit extends Model
 {
-    protected $fillable = ['company_id', 'name', 'slug'];
+    protected $fillable = ['company_id', 'name', 'code'];
 
     protected static function booted(): void
     {
-        // "Unidade A" vira "unidade-a" automaticamente, se o slug não for informado
+        // "Unidade A" vira "unidade-a" automaticamente, se o código não for informado
         static::creating(function (Unit $unit) {
-            $unit->slug ??= Str::slug($unit->name);
+            $unit->code ??= Str::slug($unit->name);
         });
     }
 

@@ -18,7 +18,7 @@ class UnitController extends Controller
         $data = $request->validate([
             'company_id' => ['required', 'exists:companies,id'],
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'alpha_dash', 'max:255', 'unique:units,slug'],
+            'code' => ['nullable', 'alpha_dash', 'max:255', 'unique:units,code'],
         ]);
 
         return response()->json(Unit::create($data)->load('company'), 201);

@@ -17,15 +17,15 @@ class UnitReport
             ->join('expenses as e', 'e.id', '=', 'a.expense_id')
             ->join('units as u', 'u.id', '=', 'a.unit_id')
             ->whereBetween('e.expense_date', [$from, $to])
-            ->groupBy('u.id', 'u.name', 'u.slug')
+            ->groupBy('u.id', 'u.name', 'u.code')
             ->orderBy('u.name')
-            ->select('u.id', 'u.name', 'u.slug')
+            ->select('u.id', 'u.name', 'u.code')
             ->selectRaw('COALESCE(SUM(a.amount_brl_cents), 0) as total_brl_cents')
             ->get()
             ->map(fn ($row) => [
                 'unit_id' => $row->id,
                 'unit' => $row->name,
-                'slug' => $row->slug,
+                'code' => $row->code,
                 'total_brl_cents' => (int) $row->total_brl_cents,
                 'total_brl' => number_format($row->total_brl_cents / 100, 2, '.', ''),
             ]);

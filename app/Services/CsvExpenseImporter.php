@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class CsvExpenseImporter
 {
-    private const COLUMNS = 6; // data;descricao;fornecedor;valor;moeda;rateio
+    private const EXPECTED_COLUMNS = 6; // data;descricao;fornecedor;valor;moeda;rateio
 
     public function __construct(private CreateExpense $createExpense)
     {
@@ -24,7 +24,7 @@ class CsvExpenseImporter
      */
     public function import(string $path): array
     {
-        $unitsBySlug = Unit::pluck('id', 'slug'); // ['unidade-a' => 1, ...] carregado uma vez só
+        $unitsByCode = Unit::pluck('id', 'code'); // ['unidade-a' => 1, ...] carregado uma vez só
         $imported = 0;
         $errors = [];
         $lineNumber = 0;
@@ -50,7 +50,7 @@ class CsvExpenseImporter
             }
 
             try {
-                $this->createExpense->handle($this->toPayload($row, $unitsBySlug));
+                $this->createExpense->handle($this->rowToExpenseData($row, $unitsByCode));
                 $imported++;
             } catch (ValidationException $e) {
                 $errors[] = [
@@ -65,11 +65,11 @@ class CsvExpenseImporter
         return ['imported' => $imported, 'errors' => $errors];
     }
 
-    private function toPayload(array $row, Collection $unitsBySlug): array
+    private function rowToExpenseData(array $row, Collection $unitsByCode): array
     {
-        if (count($row) !== self::COLUMNS) {
+        if (count($row) !== self::EXPECTED_COLUMNS) {
             throw ValidationException::withMessages([
-                'line' => 'Esperadas '.self::COLUMNS.' colunas separadas por ";", recebidas '.count($row).'.',
+                'line' => 'Esperadas '.self::EXPECTED_COLUMNS.' colunas separadas por ";", recebidas '.count($row).'.',
             ]);
         }
 
@@ -81,20 +81,20 @@ class CsvExpenseImporter
             'supplier' => $supplier,
             'amount' => $amount,
             'currency' => strtoupper($currency),
-            'allocations' => $this->parseAllocations($allocations, $unitsBySlug),
+            'allocations' => $this->parseAllocations($allocations, $unitsByCode),
         ];
     }
 
     /**
      * "unidade-a:50|unidade-b:50" → [['unit_id' => 1, 'percentage' => '50'], ['unit_id' => 2, ...]]
      */
-    private function parseAllocations(string $text, Collection $unitsBySlug): array
+    private function parseAllocations(string $text, Collection $unitsByCode): array
     {
         $allocations = [];
 
         foreach (explode('|', $text) as $part) {
-            [$slug, $percentage] = array_pad(explode(':', $part, 2), 2, null);
-            $slug = trim($slug);
+            [$code, $percentage] = array_pad(explode(':', $part, 2), 2, null);
+            $code = trim($code);
 
             if ($percentage === null) {
                 throw ValidationException::withMessages([
@@ -102,13 +102,13 @@ class CsvExpenseImporter
                 ]);
             }
 
-            if (! $unitsBySlug->has($slug)) {
+            if (! $unitsByCode->has($code)) {
                 throw ValidationException::withMessages([
-                    'allocations' => "Unidade \"{$slug}\" não encontrada.",
+                    'allocations' => "Unidade \"{$code}\" não encontrada.",
                 ]);
             }
 
-            $allocations[] = ['unit_id' => $unitsBySlug[$slug], 'percentage' => trim($percentage)];
+            $allocations[] = ['unit_id' => $unitsByCode[$code], 'percentage' => trim($percentage)];
         }
 
         return $allocations;

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained();
             $table->string('name');
-            $table->string('slug')->unique(); // usado no CSV: "unidade-a"
+            $table->string('code')->unique(); // usado no CSV: "unidade-a"
             $table->timestamps();
         });
     }

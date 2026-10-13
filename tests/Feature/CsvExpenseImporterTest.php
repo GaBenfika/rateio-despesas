@@ -23,7 +23,7 @@ class CsvExpenseImporterTest extends TestCase
 
         $company = Company::create(['name' => 'Empresa Teste']);
         foreach (['Unidade A', 'Unidade B', 'Unidade C'] as $name) {
-            $company->units()->create(['name' => $name]); // slugs: unidade-a, unidade-b, unidade-c
+            $company->units()->create(['name' => $name]); // códigos: unidade-a, unidade-b, unidade-c
         }
     }
 

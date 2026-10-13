@@ -109,7 +109,7 @@ class ApiTest extends TestCase
 
         $this->getJson('/api/reports/units?from=2026-09-01&to=2026-09-30')
             ->assertOk()
-            ->assertJsonPath('units.0.slug', 'unidade-a')
+            ->assertJsonPath('units.0.code', 'unidade-a')
             ->assertJsonPath('units.0.total_brl_cents', 11000)   // 50,00 + 60,00
             ->assertJsonPath('units.1.total_brl_cents', 5000)    // 50,00
             ->assertJsonPath('pending_expenses', 0);
