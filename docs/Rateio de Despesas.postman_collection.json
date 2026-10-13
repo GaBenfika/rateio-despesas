@@ -1,0 +1,325 @@
+{
+	"info": {
+		"_postman_id": "c7ef44d8-cf36-4eb7-86bb-c9b4bf2a5c30",
+		"name": "Rateio de Despesas",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "58407104",
+		"_collection_link": "https://benficaga04-309628.postman.co/workspace/Gabriel-Benfica's-Workspace~5d445b63-266c-4b05-892d-cd60c297d252/collection/58407104-c7ef44d8-cf36-4eb7-86bb-c9b4bf2a5c30?action=share&source=collection_link&creator=58407104"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"token\", pm.response.json().token);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"benficaga04@gmail.com\",\r\n  \"password\": \"password\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar unidades",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/units",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"units"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar unidade",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"company_id\": 2,\r\n  \"name\": \"Unidade D\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/units",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"units"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar despesa BRL",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"description\": \"Internet\",\r\n  \"supplier\": \"Fornecedor Y\",\r\n  \"expense_date\": \"2026-09-02\",\r\n  \"currency\": \"BRL\",\r\n  \"amount\": \"100.00\",\r\n  \"allocations\": [\r\n    { \"unit_id\": 1, \"percentage\": \"33.33\" },\r\n    { \"unit_id\": 2, \"percentage\": \"33.33\" },\r\n    { \"unit_id\": 3, \"percentage\": \"33.34\" }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/expenses",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"expenses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar despesa USD",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"description\": \"Licença CRM\",\r\n  \"supplier\": \"Fornecedor X\",\r\n  \"expense_date\": \"2026-09-01\",\r\n  \"currency\": \"USD\",\r\n  \"amount\": \"1500.00\",\r\n  \"allocations\": [\r\n    { \"unit_id\": 1, \"percentage\": \"50\" },\r\n    { \"unit_id\": 2, \"percentage\": \"30\" },\r\n    { \"unit_id\": 3, \"percentage\": \"20\" }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/expenses",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"expenses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar despesa inválida (rateio 90%)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"description\": \"Aluguel\",\r\n  \"supplier\": \"Fornecedor Z\",\r\n  \"expense_date\": \"2026-09-03\",\r\n  \"currency\": \"BRL\",\r\n  \"amount\": \"2000.00\",\r\n  \"allocations\": [\r\n    { \"unit_id\": 1, \"percentage\": \"50\" },\r\n    { \"unit_id\": 2, \"percentage\": \"40\" }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/expenses",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"expenses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar despesas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/expenses",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"expenses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ver uma despesa",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/expenses/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"expenses",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Excluir despesa",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/expenses/3",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"expenses",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Importar CSV",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "///wsl.localhost/Ubuntu/home/benfica/projetos/rateio-despesas/docs/exemplo-importacao.csv"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/expenses/import",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"expenses",
+						"import"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Total por unidade no período",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/reports/units?from=2026-09-01&to=2026-09-30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"reports",
+						"units"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2026-09-01"
+						},
+						{
+							"key": "to",
+							"value": "2026-09-30"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost/api"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
