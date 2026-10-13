@@ -1,0 +1,7 @@
+data;descricao;fornecedor;valor;moeda;rateio
+2026-09-01;Licença CRM;Fornecedor X;1500.00;USD;unidade-a:50|unidade-b:30|unidade-c:20
+2026-09-02;Internet;Fornecedor Y;100.00;BRL;unidade-a:33.33|unidade-b:33.33|unidade-c:33.34
+2026-09-03;Aluguel;Fornecedor Z;2000.00;BRL;unidade-a:50|unidade-b:40
+2026-09-04;Consultoria;Fornecedor W;800.00;BRL;unidade-x:100
+2026-09-05;Linha quebrada;Fornecedor K
+2026-09-06;Café;Padaria;80.00;BRL;unidade-a:100
