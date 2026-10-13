@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Jobs\ConvertExpenseCurrency;
 use App\Models\Expense;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -42,6 +43,9 @@ class CreateExpense
             if ($expense->currency === 'BRL') {
                 // BRL não precisa de câmbio: cotação 1 e rateio imediato
                 $this->applyExchangeRate->handle($expense, '1', $data['expense_date']);
+            } else {
+                // USD: converte na fila, só depois que a transação for confirmada
+                ConvertExpenseCurrency::dispatch($expense)->afterCommit();
             }
             // USD: fica pendente; a conversão via fila entra no próximo passo
 

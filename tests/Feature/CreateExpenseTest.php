@@ -3,10 +3,14 @@
 namespace Tests\Feature;
 
 use App\Actions\CreateExpense;
+use App\Jobs\ConvertExpenseCurrency;
 use App\Models\Company;
 use App\Models\Expense;
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Queue;
+
 use Tests\TestCase;
 
 class CreateExpenseTest extends TestCase
@@ -50,13 +54,16 @@ class CreateExpenseTest extends TestCase
         $this->assertSame(10000, (int) $expense->allocations->sum('amount_brl_cents'));
     }
 
-    public function test_despesa_em_usd_fica_pendente_ate_a_conversao(): void
+    public function test_despesa_em_usd_fica_pendente_e_vai_para_a_fila(): void
     {
+        Queue::fake(); // segura o job na fila, sem executar
+
         $expense = app(CreateExpense::class)->handle($this->payload(['currency' => 'USD']));
 
         $this->assertSame(Expense::STATUS_PENDING, $expense->status);
         $this->assertNull($expense->amount_brl_cents);
-        $this->assertCount(3, $expense->allocations); // o rateio em % já está salvo
+        $this->assertCount(3, $expense->allocations);
+        Queue::assertPushed(ConvertExpenseCurrency::class);
     }
 
     public function test_rejeita_rateio_que_nao_soma_cem_por_cento(): void

@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'exchange_rate' => [
+    'url' => env('EXCHANGE_RATE_URL', 'https://api.frankfurter.dev/v1'),
+    ],
+
 ];
