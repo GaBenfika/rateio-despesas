@@ -105,9 +105,9 @@ Os testes cobrem as regras principais:
 - **Rateio:** divisão de centavos pelo método do maior resto (R$ 100,00 em 33,33% / 33,33% / 33,34% fecha exatamente o total), empate, soma diferente de 100% e unidade repetida.
 - **Despesas:** criação em BRL (rateio imediato) e em USD (fica pendente e vai para a fila), e rejeição de data futura.
 - **Câmbio:** conversão com cotação simulada, fim de semana usando a cotação do último dia útil e API fora do ar sem perder a despesa.
-- **CSV:** importação parcial com relatório de erros por linha, arquivo salvo pelo Excel (BOM) e linhas em branco.
+- **CSV:** importação parcial com relatório de erros por linha, arquivo salvo pelo Excel (BOM e codificação Windows-1252), linhas em branco e importação pela tela com o arquivo de exemplo.
 - **API:** autenticação (401 sem token), criação, validação (422), 404 para registro inexistente, importação e relatório.
-- **Telas:** redirecionamento para o login, carregamento das páginas e cadastro de despesa pelo formulário.
+- **Telas:** redirecionamento para o login, carregamento das páginas e cadastro de despesa pelo formulário, recusa de texto acima de 255 caracteres e de valor acima do limite, e recusa de unidade cujo código gerado já existe ou fica vazio.
 - **Comando `user:create`:** criação do usuário com a senha em hash e recusa de e-mail inválido ou já cadastrado e de senha curta.
 
 A API de câmbio não é chamada de verdade nos testes: as respostas são simuladas com `Http::fake()`.
@@ -265,7 +265,7 @@ Cada unidade recebe a sua parte arredondada para baixo, e os centavos que sobram
 A Frankfurter é gratuita, não exige chave e, para fins de semana e feriados, devolve a cotação do último dia útil. A data efetivamente usada é gravada em `exchange_rate_date`, separada da `expense_date`, junto com a cotação (`exchange_rate`). Isso permite auditar qualquer conversão depois. A URL é configurável (`EXCHANGE_RATE_URL`) e trocar de fonte afeta apenas o `ExchangeRateClient`.
 
 **6. Importação CSV linha a linha.**
-Cada linha passa pela mesma `CreateExpense` e é gravada na sua própria transação: uma linha inválida não impede as válidas, e o retorno lista os erros com o número da linha. As unidades são carregadas uma vez só, e o importador aceita o BOM que o Excel adiciona e ignora linhas em branco.
+Cada linha passa pela mesma `CreateExpense` e é gravada na sua própria transação: uma linha inválida não impede as válidas, e o retorno lista os erros com o número da linha. As unidades são carregadas uma vez só, e o importador aceita o BOM que o Excel adiciona, converte para UTF-8 os arquivos salvos em Windows-1252 (o padrão do Excel em português) e ignora linhas em branco.
 
 **7. Relatório somando o que foi gravado no rateio.**
 O total por unidade é a soma de `expense_allocations.amount_brl_cents`, ou seja, exatamente os centavos atribuídos no rateio, sem recalcular percentuais na consulta. Despesas ainda sem cotação não entram na soma, mas são informadas em `pending_expenses`, para quem lê o relatório saber que o total ainda pode mudar.
@@ -277,7 +277,13 @@ A API usa Laravel Sanctum com token Bearer, e as telas usam sessão com login. N
 Toda rota em `/api` responde em JSON, inclusive erros de validação (422) e de autenticação (401). Um ID inexistente devolve 404 com uma mensagem clara (`Registro não encontrado (id: 99).`) no lugar da página de erro do Laravel. As rotas da API têm o prefixo de nome `api.`, para não colidir com os nomes das rotas das telas.
 
 **10. Validação e limites.**
-Valores e percentuais com até 2 casas decimais e maiores que zero, moeda restrita a BRL e USD, data no formato `AAAA-MM-DD` e não futura (não existe cotação para o futuro), unidade existente e sem repetição na mesma despesa (também garantido por índice único no banco), soma do rateio exatamente 100%, CSV de até 2 MB e listagem paginada (20 por página).
+- Textos (descrição, fornecedor, nome e código da unidade) com até 255 caracteres, validados no servidor e limitados também no formulário.
+- Valores e percentuais com até 2 casas decimais e maiores que zero. O valor máximo é 999.999.999,99 por despesa, bem abaixo do limite de um inteiro em centavos.
+- Moeda restrita a BRL e USD, e data no formato `AAAA-MM-DD` e não futura (não existe cotação para o futuro).
+- Unidade existente e sem repetição na mesma despesa (também garantido por índice único no banco), e soma do rateio exatamente 100%.
+- Código da unidade único: quando não é informado, é gerado a partir do nome e validado antes de gravar.
+- CSV de até 2 MB e listagem paginada (20 por página).
+- Mensagens de validação em português, com os nomes dos campos traduzidos (`lang/pt_BR/validation.php`).
 
 **11. Sem edição de despesa.**
 Editar exigiria refazer a conversão e o rateio e decidir o que acontece com a cotação já usada. Para corrigir, a despesa é excluída e lançada de novo (as linhas de rateio são apagadas em cascata). Os detalhes estão em "O que ficou de fora e por quê".

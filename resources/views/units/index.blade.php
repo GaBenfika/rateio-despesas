@@ -18,10 +18,10 @@
                     </select>
                 </label>
                 <label>Nome
-                    <input type="text" name="name" value="{{ old('name') }}" required>
+                    <input type="text" name="name" value="{{ old('name') }}" maxlength="255" required>
                 </label>
                 <label>Código <small>(opcional, usado no CSV)</small>
-                    <input type="text" name="code" value="{{ old('code') }}" placeholder="gerado a partir do nome">
+                    <input type="text" name="code" value="{{ old('code') }}" maxlength="255" placeholder="gerado a partir do nome">
                 </label>
             </div>
             <button type="submit">Cadastrar unidade</button>

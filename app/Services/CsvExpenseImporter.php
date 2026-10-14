@@ -42,6 +42,12 @@ class CsvExpenseImporter
                 continue; // linha em branco
             }
 
+            // O Excel em português salva o CSV em Windows-1252 ("Licença" com ç em 1 byte): converte para UTF-8
+            $row = array_map(
+                fn (string $value) => mb_check_encoding($value, 'UTF-8') ? $value : mb_convert_encoding($value, 'UTF-8', 'Windows-1252'),
+                $row
+            );
+
             if ($lineNumber === 1) {
                 $row[0] = preg_replace('/^\xEF\xBB\xBF/', '', $row[0]); // remove o BOM que o Excel adiciona
                 if (strtolower(trim($row[0])) === 'data') {

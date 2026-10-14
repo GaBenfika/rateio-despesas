@@ -60,12 +60,13 @@ class CreateExpense
             'supplier' => ['required', 'string', 'max:255'],
             'expense_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'], // não existe cotação futura
             'currency' => ['required', 'in:BRL,USD'],
-            'amount' => ['required', 'decimal:0,2', 'gt:0'],
+            'amount' => ['required', 'decimal:0,2', 'gt:0', 'max:999999999.99'], // cabe com folga em inteiro de centavos
             'allocations' => ['required', 'array', 'min:1'],
             'allocations.*.unit_id' => ['required', 'integer', 'distinct', 'exists:units,id'],
             'allocations.*.percentage' => ['required', 'decimal:0,2', 'gt:0', 'max:100'],
         ], [
             'expense_date.before_or_equal' => 'A data da despesa não pode ser futura.',
+            'amount.max' => 'O valor máximo por despesa é 999.999.999,99.',
         ])->validate();
 
         $totalBasisPoints = array_sum(array_map(
