@@ -82,6 +82,20 @@ class CreateExpenseTest extends TestCase
         }
     }
 
+    public function test_rejeita_despesa_com_data_futura(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        try {
+            app(CreateExpense::class)->handle($this->payload([
+                'currency' => 'USD',
+                'expense_date' => now()->addDay()->toDateString(),
+            ]));
+        } finally {
+            $this->assertSame(0, Expense::count()); // nada foi gravado
+        }
+    }
+
     public function test_rejeita_a_mesma_unidade_repetida_no_rateio(): void
     {
         $this->expectException(ValidationException::class);

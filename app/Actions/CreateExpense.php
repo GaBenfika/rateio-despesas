@@ -48,7 +48,6 @@ class CreateExpense
                 // USD: converte na fila, só depois que a transação for confirmada
                 ConvertExpenseToBrl::dispatch($expense)->afterCommit();
             }
-            // USD: fica pendente; a conversão via fila entra no próximo passo
 
             return $expense->fresh('allocations');
         });
@@ -59,12 +58,14 @@ class CreateExpense
         $data = Validator::make($input, [
             'description' => ['required', 'string', 'max:255'],
             'supplier' => ['required', 'string', 'max:255'],
-            'expense_date' => ['required', 'date_format:Y-m-d'],
+            'expense_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'], // não existe cotação futura
             'currency' => ['required', 'in:BRL,USD'],
             'amount' => ['required', 'decimal:0,2', 'gt:0'],
             'allocations' => ['required', 'array', 'min:1'],
             'allocations.*.unit_id' => ['required', 'integer', 'distinct', 'exists:units,id'],
             'allocations.*.percentage' => ['required', 'decimal:0,2', 'gt:0', 'max:100'],
+        ], [
+            'expense_date.before_or_equal' => 'A data da despesa não pode ser futura.',
         ])->validate();
 
         $totalBasisPoints = array_sum(array_map(
