@@ -57,6 +57,14 @@ Acesse **http://localhost** e entre com o usuário criado pelo seeder:
 |---|---|
 | `benficaga04@gmail.com` | `password` |
 
+Para criar um usuário com seu próprio e-mail e senha:
+
+```bash
+./vendor/bin/sail artisan user:create
+```
+
+O comando pergunta nome, e-mail e senha (mínimo de 8 caracteres). O usuário criado vale para o login na tela e na API.
+
 O mesmo usuário serve para o login na API.
 
 O seeder também cria 2 empresas e 3 unidades (`unidade-a`, `unidade-b` e `unidade-c`), que são os códigos usados no CSV de exemplo.
@@ -100,6 +108,7 @@ Os testes cobrem as regras principais:
 - **CSV:** importação parcial com relatório de erros por linha, arquivo salvo pelo Excel (BOM) e linhas em branco.
 - **API:** autenticação (401 sem token), criação, validação (422), 404 para registro inexistente, importação e relatório.
 - **Telas:** redirecionamento para o login, carregamento das páginas e cadastro de despesa pelo formulário.
+- **Comando `user:create`:** criação do usuário com a senha em hash e recusa de e-mail inválido ou já cadastrado e de senha curta.
 
 A API de câmbio não é chamada de verdade nos testes: as respostas são simuladas com `Http::fake()`.
 
