@@ -95,7 +95,7 @@ Para conectar um cliente como o MySQL Workbench ou o DBeaver:
 Os testes cobrem as regras principais:
 
 - **Rateio:** divisão de centavos pelo método do maior resto (R$ 100,00 em 33,33% / 33,33% / 33,34% fecha exatamente o total), empate, soma diferente de 100% e unidade repetida.
-- **Despesas:** criação em BRL (rateio imediato) e em USD (fica pendente e vai para a fila).
+- **Despesas:** criação em BRL (rateio imediato) e em USD (fica pendente e vai para a fila), e rejeição de data futura.
 - **Câmbio:** conversão com cotação simulada, fim de semana usando a cotação do último dia útil e API fora do ar sem perder a despesa.
 - **CSV:** importação parcial com relatório de erros por linha, arquivo salvo pelo Excel (BOM) e linhas em branco.
 - **API:** autenticação (401 sem token), criação, validação (422), 404 para registro inexistente, importação e relatório.
@@ -114,7 +114,7 @@ Todas as rotas usam o prefixo `/api`. Exceto o login, todas exigem o cabeçalho 
 | `POST` | `/login` | Devolve o token de acesso |
 | `GET` | `/units` | Lista as unidades com a empresa |
 | `POST` | `/units` | Cadastra uma unidade |
-| `GET` | `/expenses` | Lista as despesas (filtros opcionais: `from`, `to`, `status`, `currency`) |
+| `GET` | `/expenses` | Lista as despesas, mais recentes primeiro (20 por página, parâmetro `page`) |
 | `POST` | `/expenses` | Cadastra uma despesa com rateio |
 | `GET` | `/expenses/{id}` | Mostra uma despesa com o rateio |
 | `DELETE` | `/expenses/{id}` | Exclui uma despesa |
@@ -236,7 +236,48 @@ Os controllers só recebem a requisição e chamam as Actions e Services. A regr
 
 ## Decisões técnicas
 
-> _Seção a ser preenchida._
+**1. Arquitetura simples, com a regra em um lugar só.**
+Sem Repository, DTO ou camadas extras: controllers finos chamando Actions e Services. Toda despesa nasce pela `CreateExpense`, seja pela API, pela tela ou pelo CSV. Assim a validação e o rateio não podem divergir entre as portas de entrada, e há um único lugar para testar e alterar.
+
+**2. Dinheiro em centavos e percentual em pontos-base.**
+Valores são gravados como inteiros em centavos (`amount_cents`, `amount_brl_cents`) e percentuais em pontos-base (`percentage_bp`, 10000 = 100%). Com inteiros não há erro de arredondamento de ponto flutuante, e "a soma precisa ser 100%" vira uma comparação exata (`=== 10000`, na constante `AllocationSplitter::ONE_HUNDRED_PERCENT`).
+
+**3. Rateio pelo método do maior resto, feito em BRL.**
+Cada unidade recebe a sua parte arredondada para baixo, e os centavos que sobram vão, um a um, para as maiores frações descartadas. A soma das partes sempre fecha exatamente com o total (R$ 100,00 em 33,33% / 33,33% / 33,34% não perde nem cria centavo). O rateio é feito sobre o valor já convertido em BRL, e não convertendo cada parte em dólar, para que o total por unidade feche com o valor em reais da despesa.
+
+**4. Câmbio na fila.**
+- A conversão USD → BRL roda no job `ConvertExpenseToBrl`, fora da requisição: se a API de câmbio estiver lenta ou fora do ar, o cadastro não falha e a despesa fica salva como `pending`.
+- **Nova tentativa com espera crescente:** até 5 tentativas, aguardando 1, 5 e 15 minutos. Esgotadas, a despesa continua salva, o job fica em `failed_jobs` e pode ser reprocessado com `queue:retry`.
+- **`afterCommit`:** o job só é enfileirado depois que a transação que criou a despesa é confirmada, para o worker nunca buscar uma despesa que ainda não existe no banco.
+- **Idempotência:** o job ignora despesas que não estão mais pendentes, então um job duplicado ou reprocessado não converte duas vezes.
+- **Worker no Docker:** o serviço `queue` do `compose.yaml` sobe junto com o `sail up -d` e reinicia sozinho se cair, então ninguém precisa lembrar de rodar `queue:work`.
+
+**5. Frankfurter, fim de semana e `exchange_rate_date`.**
+A Frankfurter é gratuita, não exige chave e, para fins de semana e feriados, devolve a cotação do último dia útil. A data efetivamente usada é gravada em `exchange_rate_date`, separada da `expense_date`, junto com a cotação (`exchange_rate`). Isso permite auditar qualquer conversão depois. A URL é configurável (`EXCHANGE_RATE_URL`) e trocar de fonte afeta apenas o `ExchangeRateClient`.
+
+**6. Importação CSV linha a linha.**
+Cada linha passa pela mesma `CreateExpense` e é gravada na sua própria transação: uma linha inválida não impede as válidas, e o retorno lista os erros com o número da linha. As unidades são carregadas uma vez só, e o importador aceita o BOM que o Excel adiciona e ignora linhas em branco.
+
+**7. Relatório somando o que foi gravado no rateio.**
+O total por unidade é a soma de `expense_allocations.amount_brl_cents`, ou seja, exatamente os centavos atribuídos no rateio, sem recalcular percentuais na consulta. Despesas ainda sem cotação não entram na soma, mas são informadas em `pending_expenses`, para quem lê o relatório saber que o total ainda pode mudar.
+
+**8. Autenticação na API e também nas telas.**
+A API usa Laravel Sanctum com token Bearer, e as telas usam sessão com login. Nenhuma rota de dados fica aberta, em nenhuma das duas portas.
+
+**9. Respostas da API previsíveis.**
+Toda rota em `/api` responde em JSON, inclusive erros de validação (422) e de autenticação (401). Um ID inexistente devolve 404 com uma mensagem clara (`Registro não encontrado (id: 99).`) no lugar da página de erro do Laravel. As rotas da API têm o prefixo de nome `api.`, para não colidir com os nomes das rotas das telas.
+
+**10. Validação e limites.**
+Valores e percentuais com até 2 casas decimais e maiores que zero, moeda restrita a BRL e USD, data no formato `AAAA-MM-DD` e não futura (não existe cotação para o futuro), unidade existente e sem repetição na mesma despesa (também garantido por índice único no banco), soma do rateio exatamente 100%, CSV de até 2 MB e listagem paginada (20 por página).
+
+**11. Sem edição de despesa.**
+Editar exigiria refazer a conversão e o rateio e decidir o que acontece com a cotação já usada. Para corrigir, a despesa é excluída e lançada de novo (as linhas de rateio são apagadas em cascata). Os detalhes estão em "O que ficou de fora e por quê".
+
+**12. Interface simples, sem build de front-end.**
+Blade com Pico CSS via CDN e um CSS próprio pequeno. Não há Node, npm nem Vite para instalar ou compilar: o foco do teste é a regra de negócio, e as telas existem para usá-la de ponta a ponta.
+
+**13. Docker com Sail.**
+O ambiente inteiro (PHP, MySQL e worker da fila) sobe com `sail up -d`, e só é preciso ter Docker e Git. Quem avalia roda exatamente o mesmo ambiente do desenvolvimento, sem instalar PHP nem MySQL na máquina.
 
 ---
 
