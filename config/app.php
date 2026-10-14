@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'America/Sao_Paulo', // "hoje" no fuso de quem usa o sistema
 
     /*
     |--------------------------------------------------------------------------

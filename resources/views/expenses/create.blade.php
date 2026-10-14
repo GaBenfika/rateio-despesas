@@ -14,7 +14,7 @@
                 <label>Fornecedor <input type="text" name="supplier" value="{{ old('supplier') }}" maxlength="255" required></label>
             </div>
             <div class="grid">
-                <label>Data <input type="date" name="expense_date" value="{{ old('expense_date', now()->toDateString()) }}" max="{{ now()->toDateString() }}" required></label>
+                <label>Data <input type="date" name="expense_date" value="{{ old('expense_date', now()->toDateString()) }}" required></label>
                 <label>Valor <input type="number" name="amount" step="0.01" min="0.01" max="999999999.99" value="{{ old('amount') }}" required></label>
                 <label>Moeda
                     <select name="currency">

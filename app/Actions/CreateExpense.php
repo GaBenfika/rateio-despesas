@@ -46,7 +46,12 @@ class CreateExpense
                 $this->applyExchangeRate->handle($expense, '1', $data['expense_date']);
             } else {
                 // USD: converte na fila, só depois que a transação for confirmada
-                ConvertExpenseToBrl::dispatch($expense)->afterCommit();
+                $job = ConvertExpenseToBrl::dispatch($expense)->afterCommit();
+
+                // Data futura ainda não tem cotação: agenda para o dia seguinte, quando a do dia já foi publicada
+                if ($expense->expense_date->isFuture()) {
+                    $job->delay($expense->expense_date->copy()->addDay()->startOfDay());
+                }
             }
 
             return $expense->fresh('allocations');
@@ -58,14 +63,13 @@ class CreateExpense
         $data = Validator::make($input, [
             'description' => ['required', 'string', 'max:255'],
             'supplier' => ['required', 'string', 'max:255'],
-            'expense_date' => ['bail', 'required', 'date_format:Y-m-d', 'before_or_equal:today'], // não existe cotação futura
+            'expense_date' => ['bail', 'required', 'date_format:Y-m-d'],
             'currency' => ['required', 'in:BRL,USD'],
             'amount' => ['bail', 'required', 'decimal:0,2', 'gt:0', 'max:999999999.99'], // cabe com folga em inteiro de centavos
             'allocations' => ['required', 'array', 'min:1'],
             'allocations.*.unit_id' => ['required', 'integer', 'distinct', 'exists:units,id'],
             'allocations.*.percentage' => ['required', 'decimal:0,2', 'gt:0', 'max:100'],
         ], [
-            'expense_date.before_or_equal' => 'A data da despesa não pode ser futura.',
             'amount.max' => 'O valor máximo por despesa é 999.999.999,99.',
         ])->validate();
 

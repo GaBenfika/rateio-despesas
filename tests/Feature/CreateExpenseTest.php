@@ -82,18 +82,41 @@ class CreateExpenseTest extends TestCase
         }
     }
 
-    public function test_rejeita_despesa_com_data_futura(): void
+    public function test_despesa_em_usd_com_data_futura_agenda_a_conversao_para_o_dia_seguinte(): void
     {
-        $this->expectException(ValidationException::class);
+        Queue::fake();
+        $this->travelTo('2026-10-13 22:00:00'); // horário de Brasília; em UTC já seria dia 14
 
-        try {
-            app(CreateExpense::class)->handle($this->payload([
-                'currency' => 'USD',
-                'expense_date' => now()->addDay()->toDateString(),
-            ]));
-        } finally {
-            $this->assertSame(0, Expense::count()); // nada foi gravado
-        }
+        $expense = app(CreateExpense::class)->handle($this->payload([
+            'currency' => 'USD',
+            'expense_date' => '2026-10-14', // amanhã
+        ]));
+
+        $this->assertSame(Expense::STATUS_PENDING, $expense->status);
+        Queue::assertPushed(
+            ConvertExpenseToBrl::class,
+            fn (ConvertExpenseToBrl $job) => $job->delay->toDateTimeString() === '2026-10-15 00:00:00'
+        );
+    }
+
+    public function test_despesa_em_usd_de_hoje_ou_passada_converte_sem_esperar(): void
+    {
+        Queue::fake();
+        $this->travelTo('2026-10-13 22:00:00');
+
+        app(CreateExpense::class)->handle($this->payload(['currency' => 'USD', 'expense_date' => '2026-10-13']));
+
+        Queue::assertPushed(ConvertExpenseToBrl::class, fn (ConvertExpenseToBrl $job) => $job->delay === null);
+    }
+
+    public function test_despesa_em_brl_com_data_futura_e_rateada_na_hora(): void
+    {
+        $this->travelTo('2026-10-13 22:00:00');
+
+        $expense = app(CreateExpense::class)->handle($this->payload(['expense_date' => '2026-12-01']));
+
+        $this->assertSame(Expense::STATUS_CONVERTED, $expense->status);
+        $this->assertSame(10000, $expense->amount_brl_cents);
     }
 
     public function test_rejeita_a_mesma_unidade_repetida_no_rateio(): void
