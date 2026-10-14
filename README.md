@@ -24,7 +24,14 @@ Cada despesa (ferramentas, serviços, pessoas) é dividida entre unidades por pe
 
 ## Como rodar
 
-Pré-requisitos: **Docker** e **Git**. Não é preciso ter PHP nem Composer instalados.
+Pré-requisitos: **Docker** (com Docker Compose v2) e **Git**, em Linux, macOS ou Windows com **WSL2**.
+Não é preciso ter PHP, Composer nem MySQL instalados: tudo roda em containers.
+
+> **Windows:** rode os comandos dentro do terminal do WSL2 (Ubuntu, por exemplo), com o projeto clonado no sistema de arquivos do Linux (`~/projetos`), e não em `/mnt/c/...`.
+>
+> **Portas:** a aplicação usa a porta 80 e o MySQL a 3306. Se alguma estiver ocupada, defina `APP_PORT` ou `FORWARD_DB_PORT` no `.env` antes do passo 4.
+>
+> Na primeira vez, o `sail up` leva alguns minutos para montar a imagem da aplicação.
 
 ```bash
 # 1. Clonar o projeto
@@ -103,7 +110,7 @@ Para conectar um cliente como o MySQL Workbench ou o DBeaver:
 Os testes cobrem as regras principais:
 
 - **Rateio:** divisão de centavos pelo método do maior resto (R$ 100,00 em 33,33% / 33,33% / 33,34% fecha exatamente o total), empate, soma diferente de 100% e unidade repetida.
-- **Despesas:** criação em BRL (rateio imediato) e em USD (fica pendente e vai para a fila), e rejeição de data futura.
+- **Despesas:** criação em BRL (rateio imediato) e em USD (fica pendente e vai para a fila), e data futura: em USD a conversão é agendada para o dia seguinte à data, em BRL o rateio é imediato.
 - **Câmbio:** conversão com cotação simulada, fim de semana usando a cotação do último dia útil e API fora do ar sem perder a despesa.
 - **CSV:** importação parcial com relatório de erros por linha, arquivo salvo pelo Excel (BOM e codificação Windows-1252), linhas em branco e importação pela tela com o arquivo de exemplo.
 - **API:** autenticação (401 sem token), criação, validação (422), 404 para registro inexistente, importação e relatório.
@@ -264,6 +271,8 @@ Cada unidade recebe a sua parte arredondada para baixo, e os centavos que sobram
 **5. Frankfurter, fim de semana e `exchange_rate_date`.**
 A Frankfurter é gratuita, não exige chave e, para fins de semana e feriados, devolve a cotação do último dia útil. A data efetivamente usada é gravada em `exchange_rate_date`, separada da `expense_date`, junto com a cotação (`exchange_rate`). Isso permite auditar qualquer conversão depois. A URL é configurável (`EXCHANGE_RATE_URL`) e trocar de fonte afeta apenas o `ExchangeRateClient`.
 
+Despesas com data futura (provisionadas) são aceitas. Como ainda não existe cotação para essa data (a API responde 404), a conversão das despesas em USD é agendada na fila para o dia seguinte à data da despesa, quando a cotação do dia já foi publicada. Até lá, a despesa aparece como "Aguardando cotação" e é contada em `pending_expenses` no relatório. O fuso da aplicação é `America/Sao_Paulo`, para "hoje" e "amanhã" serem os de quem usa o sistema, e não os de UTC.
+
 **6. Importação CSV linha a linha.**
 Cada linha passa pela mesma `CreateExpense` e é gravada na sua própria transação: uma linha inválida não impede as válidas, e o retorno lista os erros com o número da linha. As unidades são carregadas uma vez só, e o importador aceita o BOM que o Excel adiciona, converte para UTF-8 os arquivos salvos em Windows-1252 (o padrão do Excel em português) e ignora linhas em branco.
 
@@ -279,7 +288,7 @@ Toda rota em `/api` responde em JSON, inclusive erros de validação (422) e de 
 **10. Validação e limites.**
 - Textos (descrição, fornecedor, nome e código da unidade) com até 255 caracteres, validados no servidor e limitados também no formulário.
 - Valores e percentuais com até 2 casas decimais e maiores que zero. O valor máximo é 999.999.999,99 por despesa, bem abaixo do limite de um inteiro em centavos.
-- Moeda restrita a BRL e USD, e data no formato `AAAA-MM-DD` e não futura (não existe cotação para o futuro).
+- Moeda restrita a BRL e USD, e data no formato `AAAA-MM-DD`. Datas futuras são aceitas (veja a decisão 5).
 - Unidade existente e sem repetição na mesma despesa (também garantido por índice único no banco), e soma do rateio exatamente 100%.
 - Código da unidade único: quando não é informado, é gerado a partir do nome e validado antes de gravar.
 - CSV de até 2 MB e listagem paginada (20 por página).
@@ -314,7 +323,7 @@ O ambiente inteiro (PHP, MySQL e worker da fila) sobe com `sail up -d`, e só é
 2. **Qual data vale para a conversão:** a data da despesa, a da nota fiscal ou a do pagamento?
 3. **Fins de semana e feriados:** usar a cotação do último dia útil anterior, como hoje, ou a do próximo dia útil?
 4. **O centavo que sobra no rateio** vai para a unidade com a maior fração descartada (regra atual). Existe alguma regra preferida, como a unidade principal ou a de maior percentual?
-5. **Despesas com data futura** (provisionadas) devem ser aceitas? Hoje não são, porque não existe cotação futura.
+5. **Despesas com data futura** (provisionadas): hoje são aceitas, e a conversão em USD fica agendada para o dia seguinte à data. Deve haver um limite, por exemplo no máximo 12 meses à frente?
 6. **Reimportar o mesmo CSV** deve duplicar as despesas ou ignorar as já existentes? Qual seria a chave de duplicidade?
 7. **O valor no CSV pode vir com vírgula decimal** (`1500,00`), como o Excel em português costuma gerar? Hoje é aceito apenas ponto, conforme o enunciado.
 8. **O rateio de uma despesa pode mudar depois de lançado?** Se sim, é preciso manter histórico?
