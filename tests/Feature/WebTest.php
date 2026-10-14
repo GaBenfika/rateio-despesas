@@ -65,7 +65,7 @@ class WebTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['3', 'linha(s) importada(s)', '3', 'com erro'])
             ->assertSee('A soma do rateio precisa ser exatamente 100% (recebido: 90%).')
-            ->assertSee('Unidade &quot;unidade-x&quot; não encontrada.', false)
+            ->assertSee('Unidade com código &quot;unidade-x&quot; não encontrada.', false)
             ->assertSee('Esperadas 6 colunas', false);
 
         $this->assertSame(3, Expense::count());
@@ -114,6 +114,8 @@ class WebTest extends TestCase
         $this->post('/expenses', [...$payload, 'supplier' => str_repeat('a', 256)])->assertSessionHasErrors('supplier');
         $this->post('/expenses', [...$payload, 'amount' => '1000000000.00'])
             ->assertSessionHasErrors(['amount' => 'O valor máximo por despesa é 999.999.999,99.']);
+        $this->post('/expenses', [...$payload, 'amount' => '10.555'])
+            ->assertSessionHasErrors(['amount' => 'O campo valor precisa ser um número com até 2 casas decimais.']);
 
         $this->assertSame(0, Expense::count());
     }

@@ -11,7 +11,8 @@ return [
     'before_or_equal' => 'O campo :attribute precisa ser uma data igual ou anterior a :date.',
     'date' => 'O campo :attribute precisa ser uma data válida.',
     'date_format' => 'O campo :attribute precisa estar no formato :format.',
-    'decimal' => 'O campo :attribute precisa ter :decimal casas decimais.',
+    // O projeto só usa decimal:0,2; o :decimal do Laravel viraria "0-2", por isso o texto fixo
+    'decimal' => 'O campo :attribute precisa ser um número com até 2 casas decimais.',
     'distinct' => 'O campo :attribute tem um valor repetido.',
     'email' => 'O campo :attribute precisa ser um e-mail válido.',
     'exists' => 'O valor informado em :attribute é inválido.',

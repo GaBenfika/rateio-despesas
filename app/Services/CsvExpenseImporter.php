@@ -61,7 +61,7 @@ class CsvExpenseImporter
             } catch (ValidationException $e) {
                 $errors[] = [
                     'line' => $lineNumber,
-                    'messages' => collect($e->errors())->flatten()->all(),
+                    'messages' => collect($e->errors())->flatten()->unique()->values()->all(),
                 ];
             }
         }
@@ -104,13 +104,13 @@ class CsvExpenseImporter
 
             if ($percentage === null) {
                 throw ValidationException::withMessages([
-                    'allocations' => "Rateio inválido: \"{$part}\". Formato esperado: unidade:percentual.",
+                    'allocations' => "Rateio inválido: \"{$part}\". Formato esperado: codigo-da-unidade:percentual.",
                 ]);
             }
 
             if (! $unitsByCode->has($code)) {
                 throw ValidationException::withMessages([
-                    'allocations' => "Unidade \"{$code}\" não encontrada.",
+                    'allocations' => "Unidade com código \"{$code}\" não encontrada.",
                 ]);
             }
 

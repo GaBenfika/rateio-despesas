@@ -58,9 +58,9 @@ class CreateExpense
         $data = Validator::make($input, [
             'description' => ['required', 'string', 'max:255'],
             'supplier' => ['required', 'string', 'max:255'],
-            'expense_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'], // não existe cotação futura
+            'expense_date' => ['bail', 'required', 'date_format:Y-m-d', 'before_or_equal:today'], // não existe cotação futura
             'currency' => ['required', 'in:BRL,USD'],
-            'amount' => ['required', 'decimal:0,2', 'gt:0', 'max:999999999.99'], // cabe com folga em inteiro de centavos
+            'amount' => ['bail', 'required', 'decimal:0,2', 'gt:0', 'max:999999999.99'], // cabe com folga em inteiro de centavos
             'allocations' => ['required', 'array', 'min:1'],
             'allocations.*.unit_id' => ['required', 'integer', 'distinct', 'exists:units,id'],
             'allocations.*.percentage' => ['required', 'decimal:0,2', 'gt:0', 'max:100'],

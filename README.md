@@ -201,7 +201,7 @@ data;descricao;fornecedor;valor;moeda;rateio
   "imported": 3,
   "errors": [
     { "line": 4, "messages": ["A soma do rateio precisa ser exatamente 100% (recebido: 90%)."] },
-    { "line": 5, "messages": ["Unidade \"unidade-x\" não encontrada."] },
+    { "line": 5, "messages": ["Unidade com código \"unidade-x\" não encontrada."] },
     { "line": 6, "messages": ["Esperadas 6 colunas separadas por \";\", recebidas 3."] }
   ]
 }
