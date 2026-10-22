@@ -40,7 +40,7 @@ class AllocationSplitterTest extends TestCase
         $this->assertSame(1, array_sum($result));
     }
 
-    public function test_exemplo_do_enunciado(): void
+    public function test_exemplo_em_dolar_com_rateio_50_30_20(): void
     {
         // US$ 1.500,00 convertido para, por exemplo, R$ 8.123,47, em 50/30/20
         $result = $this->splitter->split(812347, ['a' => 5000, 'b' => 3000, 'c' => 2000]);

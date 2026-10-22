@@ -3,8 +3,7 @@
 		"_postman_id": "c7ef44d8-cf36-4eb7-86bb-c9b4bf2a5c30",
 		"name": "Rateio de Despesas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "58407104",
-		"_collection_link": "https://benficaga04-309628.postman.co/workspace/Gabriel-Benfica's-Workspace~5d445b63-266c-4b05-892d-cd60c297d252/collection/58407104-c7ef44d8-cf36-4eb7-86bb-c9b4bf2a5c30?action=share&source=collection_link&creator=58407104"
+		"_exporter_id": "58407104"
 	},
 	"item": [
 		{
@@ -27,7 +26,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"email\": \"benficaga04@gmail.com\",\r\n  \"password\": \"password\"\r\n}",
+					"raw": "{\r\n  \"email\": \"admin@example.com\",\r\n  \"password\": \"password\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

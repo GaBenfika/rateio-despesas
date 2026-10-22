@@ -1,6 +1,6 @@
 # Rateio de Despesas
 
-Sistema para ratear despesas compartilhadas entre as unidades de um grupo de empresas, substituindo a planilha usada hoje.
+Sistema para ratear despesas compartilhadas entre as unidades de um grupo de empresas, como alternativa a controles em planilha.
 
 Cada despesa (ferramentas, serviços, pessoas) é dividida entre unidades por percentual. Despesas em dólar são convertidas para real com a cotação da data da despesa, e o sistema gera o total em BRL de cada unidade por período.
 
@@ -17,8 +17,8 @@ Cada despesa (ferramentas, serviços, pessoas) é dividida entre unidades por pe
 | Conversão USD → BRL pela cotação da data da despesa, sem perder a despesa se a API de câmbio cair | Fila com nova tentativa automática |
 | Importação por CSV com relatório de erros por linha | API e tela **Importar CSV** |
 | Relatório de total em BRL por unidade no período | API e tela **Total por unidade** |
-| Autenticação na API (diferencial) | Laravel Sanctum (token Bearer) |
-| Conversão de câmbio via fila com retry (diferencial) | Job com 5 tentativas e espera crescente |
+| Autenticação na API | Laravel Sanctum (token Bearer) |
+| Conversão de câmbio via fila com retry | Job com 5 tentativas e espera crescente |
 
 ---
 
@@ -62,7 +62,7 @@ Acesse **http://localhost** e entre com o usuário criado pelo seeder:
 
 | E-mail | Senha |
 |---|---|
-| `benficaga04@gmail.com` | `password` |
+| `admin@example.com` | `password` |
 
 Para criar um usuário com seu próprio e-mail e senha:
 
@@ -143,7 +143,7 @@ Todas as rotas usam o prefixo `/api`. Exceto o login, todas exigem o cabeçalho 
 
 ```json
 POST /api/login
-{ "email": "benficaga04@gmail.com", "password": "password" }
+{ "email": "admin@example.com", "password": "password" }
 ```
 
 **Cadastrar despesa**
@@ -186,7 +186,7 @@ GET /api/reports/units?from=2026-09-01&to=2026-09-30
 
 ### Coleção do Postman
 
-Em `docs/Rateio de Despesas.postman_collection.json`. Importe no Postman e faça o login: o token é salvo automaticamente na variável `token` da coleção e usado nas demais requisições.
+Em `docs/rateio-despesas.postman_collection.json`. Importe no Postman e faça o login: o token é salvo automaticamente na variável `token` da coleção e usado nas demais requisições.
 
 ---
 
@@ -298,10 +298,10 @@ Toda rota em `/api` responde em JSON, inclusive erros de validação (422) e de 
 Editar exigiria refazer a conversão e o rateio e decidir o que acontece com a cotação já usada. Para corrigir, a despesa é excluída e lançada de novo (as linhas de rateio são apagadas em cascata). Os detalhes estão em "O que ficou de fora e por quê".
 
 **12. Interface simples, sem build de front-end.**
-Blade com Pico CSS via CDN e um CSS próprio pequeno. Não há Node, npm nem Vite para instalar ou compilar: o foco do teste é a regra de negócio, e as telas existem para usá-la de ponta a ponta.
+Blade com Pico CSS via CDN e um CSS próprio pequeno. Não há Node, npm nem Vite para instalar ou compilar: o foco do projeto é a regra de negócio, e as telas existem para usá-la de ponta a ponta.
 
 **13. Docker com Sail.**
-O ambiente inteiro (PHP, MySQL e worker da fila) sobe com `sail up -d`, e só é preciso ter Docker e Git. Quem avalia roda exatamente o mesmo ambiente do desenvolvimento, sem instalar PHP nem MySQL na máquina.
+O ambiente inteiro (PHP, MySQL e worker da fila) sobe com `sail up -d`, e só é preciso ter Docker e Git. Quem clona o projeto roda exatamente o mesmo ambiente do desenvolvimento, sem instalar PHP nem MySQL na máquina.
 
 ---
 
@@ -310,7 +310,7 @@ O ambiente inteiro (PHP, MySQL e worker da fila) sobe com `sail up -d`, e só é
 - **Edição de despesa:** editar exigiria refazer a conversão e o rateio e manter um histórico do que mudou. Para corrigir, a despesa é excluída e lançada novamente. Edição com histórico seria a evolução natural.
 - **Cadastro de empresas pela interface:** as empresas são criadas pelo seeder, já que o requisito pede cadastro de unidades e a empresa é apenas o vínculo delas.
 - **Permissões por perfil:** há um único tipo de usuário. Perfis (quem lança, quem aprova, quem só consulta) dependem de regras do negócio ainda não definidas.
-- **Outras moedas além de BRL e USD:** fora do escopo do enunciado. A estrutura já guarda moeda e cotação por despesa, então a extensão é localizada.
+- **Outras moedas além de BRL e USD:** fora do escopo desta versão. A estrutura já guarda moeda e cotação por despesa, então a extensão é localizada.
 - **Importação de arquivos grandes em segundo plano:** o CSV é processado na hora, o que atende planilhas de centenas de linhas e devolve o relatório imediatamente. Para arquivos grandes, a evolução é processar na fila e consultar o resultado depois.
 - **Cotação oficial do Banco Central (PTAX):** foi usada a Frankfurter, que é gratuita, não exige chave e já trata fins de semana e feriados. Trocar de fonte afeta apenas o `ExchangeRateClient`.
 - **Reprocessamento automático de conversões que esgotaram as tentativas:** hoje é feito com `sail artisan queue:retry all`. Um agendamento que reenvia as despesas pendentes seria a evolução.
@@ -325,7 +325,7 @@ O ambiente inteiro (PHP, MySQL e worker da fila) sobe com `sail up -d`, e só é
 4. **O centavo que sobra no rateio** vai para a unidade com a maior fração descartada (regra atual). Existe alguma regra preferida, como a unidade principal ou a de maior percentual?
 5. **Despesas com data futura** (provisionadas): hoje são aceitas, e a conversão em USD fica agendada para o dia seguinte à data. Deve haver um limite, por exemplo no máximo 12 meses à frente?
 6. **Reimportar o mesmo CSV** deve duplicar as despesas ou ignorar as já existentes? Qual seria a chave de duplicidade?
-7. **O valor no CSV pode vir com vírgula decimal** (`1500,00`), como o Excel em português costuma gerar? Hoje é aceito apenas ponto, conforme o enunciado.
+7. **O valor no CSV pode vir com vírgula decimal** (`1500,00`), como o Excel em português costuma gerar? Hoje é aceito apenas ponto, conforme o formato definido.
 8. **O rateio de uma despesa pode mudar depois de lançado?** Se sim, é preciso manter histórico?
 9. **Quem pode lançar, editar e excluir despesas?** Há aprovação antes de a despesa entrar no relatório?
 10. **Existe valor máximo esperado por despesa**, ou algum limite que deva gerar alerta?
